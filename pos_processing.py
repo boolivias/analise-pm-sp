@@ -1,62 +1,37 @@
 import os
 import pandas as pd
+import numpy as np
+
+def maior_ocorrencia(x):
+    df = x.value_counts(dropna=False)
+    df_max = df[df == df.max()].index.array
+    return ', '.join('NA' if value is np.nan else value for value in df_max)
 
 # Diretório base contendo as pastas dos anos
 diretorio_base = './files/output'
 
 # Lista de anos (pastas) a serem percorridos
 anos = [str(ano) for ano in range(2013, 2023)]
-print(anos)
 
 # Para cada ano (pasta) no diretório base
 for ano in anos:
+    # Dicionário para armazenar as analises de cada cluster
+    analise_cluster = {}
+
     # Caminho completo para o diretório do ano
     diretorio_ano = f"{diretorio_base}/ {ano}"
     
     # Caminho completo para o arquivo .xlsx
     arquivo_xlsx = f"{diretorio_ano}/kohonen_info.xlsx"
-    print(arquivo_xlsx)
+
+    abas = pd.ExcelFile(arquivo_xlsx).sheet_names[1:] # Obter todas as abas, exceto a primeira (aba de dados)
+    aba_dados = pd.read_excel(arquivo_xlsx, sheet_name="Dados")
+    aba_dados = aba_dados[['Neuronio', 'COORPORAÇÃO', 'SITUAÇÃO', 'DESC_TIPOLOCAL', 'COR_PELE', 'PROFISSAO', 'REGIAO', 'FAIXA_ETARIA', 'PERIODO_DIA']]
+    dados_agrupados = aba_dados.groupby(['Neuronio']).agg(maior_ocorrencia).reset_index()
     
-    # Carregar o arquivo .xlsx em um objeto ExcelFile
-    xls = pd.ExcelFile(arquivo_xlsx)
-    
-    # Obter todas as abas, exceto a primeira
-    abas = xls.sheet_names[1:]
-    
-    # Para cada aba no arquivo .xlsx
+    writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_analise.xlsx")
     for aba in abas:
-        # Carregar a aba em um DataFrame
-        df = pd.read_excel(arquivo_xlsx, sheet_name=aba)
-        
-        # Criar um novo DataFrame vazio para armazenar as tabelas
-        df_tabelas = pd.DataFrame()
-        
-        # Criar uma lista para armazenar as tabelas
-        tabelas = []
-        
-        # Para cada linha do DataFrame
-        for _, row in df.iterrows():
-            # Obtenha as 5 colunas com os maiores valores
-            top_columns = row.nlargest(6)
-            
-            # Crie uma tabela com nome da coluna e valor
-            table = pd.DataFrame({
-                'Coluna': top_columns.index,
-                'Valor': top_columns.values
-            })
-            
-            # Adicione a tabela à lista de tabelas
-            tabelas.append(table)
-        
-        # Gerar o nome do arquivo .txt com base na aba
-        nome_arquivo_txt = f'{aba}.txt'
-        
-        # Caminho completo para o arquivo .txt
-        caminho_arquivo_txt = f'{diretorio_ano}/{nome_arquivo_txt}'
-        
-        # Escrever o DataFrame de tabelas no arquivo .txt
-        df_tabelas.to_csv(caminho_arquivo_txt, sep='\t', index=False)
-        with open(caminho_arquivo_txt, 'w') as file:
-                for tabela in tabelas:
-                    tabela.to_string(file, index=False)
-                    file.write('\n\n')
+        sheet = pd.read_excel(arquivo_xlsx, sheet_name=aba)
+        cluster_analise = dados_agrupados[dados_agrupados['Neuronio'].isin(sheet['Neuronio'].values)]
+        cluster_analise.to_excel(writer, sheet_name=aba)
+    writer.close()
