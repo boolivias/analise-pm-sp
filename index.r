@@ -5,7 +5,8 @@ library(openxlsx)
 source("silhouette.r")
 source("kohonen.r")
 
-cols_to_use <- c("COORPORAÇÃO", "SITUAÇÃO", "DESC_TIPOLOCAL", "COR_PELE", "PROFISSAO", "REGIAO", "FAIXA_ETARIA", "PERIODO_DIA")
+# cols_to_use <- c("COR_PELE", "REGIAO", "FAIXA_ETARIA", "PERIODO_DIA")
+cols_to_use <- c("COR_PELE", "REGIAO", "FAIXA_ETARIA")
 file_path <- "./files/MDIP.xlsx"
 
 abas <- excel_sheets(file_path)
@@ -29,9 +30,9 @@ for (aba in abas) {
         dir.create(path_output)
     }
 
-    pretty_palette <- c("red", 'yellow', 'green', 'orange', 'purple', 'cyan', 'blue', 'brown', 'white', 'gray', 'magenta')
+    pretty_palette <- c('red', 'yellow', 'green', 'orange', 'purple', 'cyan', 'blue', 'brown', 'white', 'gray', 'magenta')
     clusters <- calc_and_save_silhouette(
-        weights,
+        map,
         wb,
         paste0(path_output, "/", file_prefix, "_dendrogram.png"),
         pretty_palette
@@ -40,13 +41,17 @@ for (aba in abas) {
 
     saveWorkbook(wb, file = paste0(path_output, "/", file_prefix, "info.xlsx"), overwrite = TRUE)
 
+    map$clustering <- kohonen::classvec2classmat(map$unit.classif)
+    png(paste0(path_output, "/", file_prefix, "codes.png"))
+    plot(map, type = "codes", main = "Kohonen - codes", bgcol = colors)
+    add.cluster.boundaries(map, clusters)
+    dev.off()
+
     png(paste0(path_output, "/", file_prefix, "count.png"))
     plot(map, type = "count", main = "Mapa de Kohonen - count")
     dev.off()
 
-    map$clustering <- kohonen::classvec2classmat(map$unit.classif)
-    png(paste0(path_output, "/", file_prefix, "mapping.png"))
-    plot(map, type = "mapping", main = "Kohonen - codes", bgcol = colors)
-    add.cluster.boundaries(map, clusters)
-    dev.off()
+    # png(paste0(path_output, "/", file_prefix, "codes.png"))
+    # plot(map, type = "codes", main = "Mapa de Kohonen - codes")
+    # dev.off()
 }

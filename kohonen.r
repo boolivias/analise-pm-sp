@@ -30,9 +30,10 @@ generate_kohonen_map <- function (data, cols_to_map) {
     old_columns <- colnames(mapped_data)
 
     mapped_data <- dummy_cols(mapped_data)
-    data.one_hot <- model.matrix(~., data = select(mapped_data, -one_of(old_columns)))
+    data.one_hot <- model.matrix(~.+0, data = select(mapped_data, -one_of(old_columns)))
     map <- som(data.one_hot,
-                grid = somgrid(6, 6, "hexagonal")
+                grid = somgrid(6, 6, "hexagonal"),
+                keep.data = TRUE,
     )
 
     return(map)

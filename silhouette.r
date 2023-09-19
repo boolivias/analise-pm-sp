@@ -1,35 +1,45 @@
 library(openxlsx)
 library(cluster)
 
-calc_and_save_silhouette <- function(weights, wb, dendrogram_image_path, colors_neurons) {
-    distances <- dist(weights)
-    hclus_obj <- hclust(distances)
+calc_and_save_silhouette <- function(som_map, wb, dendrogram_image_path, colors_neurons) {
+    w <- som_map$codes[[1]]
+    distances <- dist(w)
+    hclus <- hclust(
+        d = distances,
+        members = (1:(som_map$grid$xdim * som_map$grid$ydim))
+    )
 
-    hclus_obj["length"] <- length(hclus_obj$order)
+    hclus["length"] <- length(hclus$order)
 
     # Inicializar um vetor para armazenar os valores de silhueta
     best_sil <- list(k = 0, sil = -1)
 
     # Calcular a silhueta para cada passo do dendrograma
-    for (i in 2:(hclus_obj$length-1)) {
-
-        clusters <- cutree(hclus_obj, k = i)
+    for (i in 2:(hclus$length-1)) {
+        clusters <- cutree(hclus, k = i)
         sil <- silhouette(clusters, distances)
-        sil_info <- summary(sil)
-        if(sil_info$avg.width > best_sil$sil) {
+        sil_avg <- mean(sil[, "sil_width"])
+        if(sil_avg > best_sil$sil) {
             best_sil$k <- i
-            best_sil$sil <- sil_info$avg.width
+            best_sil$sil <- sil_avg
         }
     }
 
-    clusters_k <- cutree(hclus_obj, k = best_sil$k)
-    idxs <- split(seq_along(clusters_k), clusters_k)
-    groups <- lapply(idxs, function(idx) cbind(weights[idx, , drop = FALSE], Neuronio = idx))
+    clusters_k <- cutree(hclus, k = best_sil$k)
 
-    for (i in 1:length(groups)) {
+    to_export <- as.data.frame(w)
+    # to_export$neuronio <- som_map$unit.classif
+    # to_export$cluster <- clusters_k[som_map$unit.classif]
+    to_export["neuronio"] <- sapply(
+        rownames(to_export), function(x) { gsub("V", "", x) }
+    )
+    to_export["cluster"] <- clusters_k
+    # to_export <- to_export[, !colnames(to_export) %in% "(Intercept)"]
+
+    for (i in 1:best_sil$k) {
         group <- data.frame(
             lapply(
-                data.frame(groups[[i]]),
+                to_export[to_export["cluster"] == i, ],
                 function(x) { formatC(x, format = "fg") }
             )
         )
@@ -40,14 +50,14 @@ calc_and_save_silhouette <- function(weights, wb, dendrogram_image_path, colors_
         writeDataTable(
             wb,
             sheet = sheet_name,
-            x = group[, !colnames(group) %in% "X.Intercept."]
+            x = group
         )
     }
 
-    dif <- hclus_obj$length - best_sil$k
-    height_k <- (hclus_obj$height[dif] + hclus_obj$height[dif+1]) / 2
+    dif <- hclus$length - best_sil$k
+    height_k <- (hclus$height[dif] + hclus$height[dif+1]) / 2
     png(dendrogram_image_path)
-    plot(as.dendrogram(hclus_obj), type = "rectangle")
+    plot(as.dendrogram(hclus), type = "rectangle")
     abline(h = height_k, col = "red")
     legend("topright", legend = paste0("K =", best_sil$k), col = "red", lty = 1)
     dev.off()
