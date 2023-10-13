@@ -60,6 +60,29 @@ for ano in anos:
         estatistica_df.to_excel(writer, sheet_name=aba, startrow=len(df_clusters)+2, index=False, header=False)
     writer.close()
 
+    writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_maiores_vetores.xlsx")
+
+    for aba in abas:
+        df_clusters = pd.read_excel(arquivo_xlsx, sheet_name=aba)
+        maiores = df_clusters.drop(['neuronio', 'cluster'], axis=1).apply(
+            lambda row: row.nlargest(3).index.tolist(),
+            axis = 1
+        )
+        df_maiores = pd.DataFrame(maiores.tolist(), columns=['maior_valor_1', 'maior_valor_2', 'maior_valor_3'])
+        # df['neuronio'] = df_clusters['neuronio']
+        df = pd.concat([df_clusters['neuronio'], df_maiores], axis=1)
+        # df.columns = ['neuronio', 'maior_valor_1', 'maior_valor_2', 'maior_valor_3']
+        df.to_excel(writer, sheet_name=aba, index=False)
+
+        worksheet = writer.sheets[aba]
+        for idx, col in enumerate(df.columns):
+            series = df[col]
+            tam_max = max((series.astype(str).apply(len).max(), len(str(col)))) + 2
+            worksheet.set_column(idx, idx, tam_max)
+        for row in range(1, len(df) + 1):
+            worksheet.set_row(row, None, writer.book.add_format({'top': 1, 'bottom': 1}))  # 1 para borda fina
+    writer.close()
+
     writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_neuronios.xlsx")
     for neuronio in range(1, 36):
         dados_neuronio = aba_dados[aba_dados['Neuronio'] == neuronio]
