@@ -13,7 +13,7 @@ def formata_maior_media(serie, estatistica_df):
     return ['color: red' if v else '' for v in array_verificado]
 
 # Diretório base contendo as pastas dos anos
-diretorio_base = './files/output'
+diretorio_base = '../out'
 
 # Lista de anos (pastas) a serem percorridos
 anos = [str(ano) for ano in range(2013, 2023)]
@@ -31,7 +31,7 @@ for ano in anos:
 
     abas = pd.ExcelFile(arquivo_xlsx).sheet_names[1:] # Obter todas as abas, exceto a primeira (aba de dados)
     aba_dados = pd.read_excel(arquivo_xlsx, sheet_name="Dados")
-    aba_dados = aba_dados[['Neuronio', 'COR_PELE', 'REGIAO', 'FAIXA_ETARIA', 'PERIODO_DIA']]
+    aba_dados = aba_dados[['Neuronio', 'COR_PELE', 'FAIXA_ETARIA', 'PERIODO_DIA']]
 
     # dados_agrupados = aba_dados.groupby(['Neuronio']).agg(maior_ocorrencia).reset_index()
     # writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_analise.xlsx")

@@ -1,13 +1,15 @@
 # Carregar pacotes necessários
+# setwd("c:\\Users\\jean.mendoza\\Desktop\\IC\\projeto\\kohonen-map\\src")
+setwd(".")
 library(readxl)
 library(cluster)
 library(openxlsx)
-source("silhouette.r")
-source("kohonen.r")
+source("./utils/silhouette.r")
+source("./utils/kohonen.r")
 
 # cols_to_use <- c("COR_PELE", "REGIAO", "FAIXA_ETARIA", "PERIODO_DIA")
-cols_to_use <- c("COR_PELE", "REGIAO", "FAIXA_ETARIA")
-file_path <- "./files/MDIP.xlsx"
+cols_to_use <- c("COR_PELE", "FAIXA_ETARIA")
+file_path <- "../data/amostra.xlsx"
 
 abas <- excel_sheets(file_path)
 
@@ -25,7 +27,7 @@ for (aba in abas) {
     weights[] <- vapply(weights, as.numeric, numeric(1))
 
     file_prefix <- "kohonen_"
-    path_output <- paste("./files/output/", aba)
+    path_output <- paste("../out/", aba)
     if (!dir.exists(path_output)) {
         dir.create(path_output)
     }
