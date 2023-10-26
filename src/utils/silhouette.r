@@ -44,7 +44,7 @@ calc_and_save_silhouette <- function(som_map, wb, dendrogram_image_path, colors_
             )
         )
         sheet_name <- paste0(
-            "Cluster ", colors_neurons[i], " ", i, " (K=", best_sil$k, ")"
+            "Cluster ", i, " ", colors_neurons[i]
         )
         addWorksheet(wb, sheetName = sheet_name)
         writeDataTable(

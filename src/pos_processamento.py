@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from utils.plota_mapa import plota_mapa
 
 def maior_ocorrencia(x):
     df = x.value_counts(dropna=False)
@@ -15,31 +16,19 @@ def formata_maior_media(serie, estatistica_df):
 # Diretório base contendo as pastas dos anos
 diretorio_base = '../out'
 
-# Lista de anos (pastas) a serem percorridos
 anos = [str(ano) for ano in range(2013, 2023)]
 
-# Para cada ano (pasta) no diretório base
 for ano in anos:
-    # Dicionário para armazenar as analises de cada cluster
-    analise_cluster = {}
 
-    # Caminho completo para o diretório do ano
     diretorio_ano = f"{diretorio_base}/ {ano}"
     
-    # Caminho completo para o arquivo .xlsx
     arquivo_xlsx = f"{diretorio_ano}/kohonen_info.xlsx"
 
     abas = pd.ExcelFile(arquivo_xlsx).sheet_names[1:] # Obter todas as abas, exceto a primeira (aba de dados)
     aba_dados = pd.read_excel(arquivo_xlsx, sheet_name="Dados")
-    aba_dados = aba_dados[['Neuronio', 'COR_PELE', 'FAIXA_ETARIA', 'PERIODO_DIA']]
+    aba_dados = aba_dados[['Neuronio', 'COR_PELE', 'FAIXA_ETARIA', 'PERIODO_DIA', 'LATITUDE', 'LONGITUDE']]
 
-    # dados_agrupados = aba_dados.groupby(['Neuronio']).agg(maior_ocorrencia).reset_index()
-    # writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_analise.xlsx")
-    # for aba in abas:
-    #     sheet = pd.read_excel(arquivo_xlsx, sheet_name=aba)
-    #     cluster_analise = dados_agrupados[dados_agrupados['Neuronio'].isin(sheet['neuronio'].values)]
-    #     cluster_analise.to_excel(writer, sheet_name=aba)
-    # writer.close()
+    plota_mapa(aba_dados, arquivo_xlsx, abas, f"{diretorio_ano}/mapa.png")
 
     writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_analise.xlsx")
     for aba in abas:
@@ -61,7 +50,6 @@ for ano in anos:
     writer.close()
 
     writer = pd.ExcelWriter(f"{diretorio_ano}/kohonen_maiores_vetores.xlsx")
-
     for aba in abas:
         df_clusters = pd.read_excel(arquivo_xlsx, sheet_name=aba)
         maiores = df_clusters.drop(['neuronio', 'cluster'], axis=1).apply(
@@ -69,9 +57,7 @@ for ano in anos:
             axis = 1
         )
         df_maiores = pd.DataFrame(maiores.tolist(), columns=['maior_valor_1', 'maior_valor_2', 'maior_valor_3'])
-        # df['neuronio'] = df_clusters['neuronio']
         df = pd.concat([df_clusters['neuronio'], df_maiores], axis=1)
-        # df.columns = ['neuronio', 'maior_valor_1', 'maior_valor_2', 'maior_valor_3']
         df.to_excel(writer, sheet_name=aba, index=False)
 
         worksheet = writer.sheets[aba]

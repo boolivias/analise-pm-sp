@@ -1,6 +1,6 @@
 # Carregar pacotes necessários
-# setwd("c:\\Users\\jean.mendoza\\Desktop\\IC\\projeto\\kohonen-map\\src")
-setwd(".")
+setwd("c:\\Users\\jean.mendoza\\Desktop\\IC\\projeto\\kohonen-map\\src")
+# setwd(".")
 library(readxl)
 library(cluster)
 library(openxlsx)
@@ -32,7 +32,26 @@ for (aba in abas) {
         dir.create(path_output)
     }
 
-    pretty_palette <- c('red', 'yellow', 'green', 'orange', 'purple', 'cyan', 'blue', 'brown', 'white', 'gray', 'magenta')
+    pretty_palette <- c(
+        'red',
+        'blue',
+        'green',
+        'darkorange',
+        'yellow',
+        'pink',
+        'purple',
+        'brown',
+        'cyan',
+        'magenta',
+        'gold',
+        'black',
+        'turquoise',
+        'coral',
+        'darkgreen',
+        'orange'
+    )
+    # pretty_palette <- sample(colors(), 16)
+
     clusters <- calc_and_save_silhouette(
         map,
         wb,
